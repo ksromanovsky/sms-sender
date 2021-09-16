@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="">
+        <div class="bg-light text-center mt-3">
+            &lt;&lt; Поиск &gt;&gt;
+        </div>
+        <form action="" method="POST" class="needs-validation" id="search-form" novalidate>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="city">Город</label>
+                    <input type="text" id="city" class="form-control">
+                </div>
+                <div class="form-group col-md-7">
+                    <label for="street">Улица</label>
+                    <input type="text" id="street" class="form-control">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="house">Дом</label>
+                    <input type="text" id="house" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="service">Услуга</label>
+                    <input type="text" id="service" class="form-control">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="status">Статус</label>
+                    <input type="text" id="status" class="form-control">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="balance">Баланс</label>
+                    <div class="d-flex">
+                        <select name="" id="equal" class="form-control w-auto">
+                            <option value="1">&lt;</option>
+                            <option value="2">=</option>
+                            <option value="3">&gt;</option>
+                        </select>
+                        <input type="text" id="balance" class="form-control ml-2" required>
+                    </div>
+                </div>
+                <div class="form-group col-md-2 ml-auto mt-auto">
+                    <button type="submit" class="btn btn-secondary form-control">Поиск</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block results %}
+    <div class="invisible" id="results-wrap">
+        <div class="bg-light text-center">
+            &lt;&lt; Результаты поиска &gt;&gt;
+            <div id="count">
+            </div>
+        </div>
+        <table class="table" id="results">
+            <thead>
+                <tr>
+                    <th>V</th>
+                    <th>ID</th>
+                    <th>Услуги</th>
+                    <th>ФИО</th>
+                    <th>Телефоны</th>
+                    <th>Баланс</th>
+                    <th>Статус отправки</th>
+                </tr>
+            </thead>
+            <tbody >
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block send %}
+    <div class="invisible" id="send-wrap">
+        <form action="" method="POST" id="send-form">
+            <div class="form-row">
+                <div class="form-group form-check col-md-3 ml-auto mt-auto">
+                    <input type="checkbox" class="form-check-input" id="checkall">
+                    <label for="checkall">Выбрать всех</label>
+                </div>
+                <div class="form-group col-md-2">
+                    <button type="submit" class="btn btn-secondary form-control">Отправить</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function(){
+            'use strict'
+            var csrf_token = "{{ csrf_token() }}"
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrf_token)
+                    }
+                }
+            })
+            $.get('{{ url_for("api_get_services") }}', function(data) {
+                $('#service').focus(function(){
+                    $('#service').val('')
+                    var l_services = []
+                    for (var lse in data) {
+                        l_services.push(data[lse])
+                    }
+                    $('#service').autocomplete({
+                        source: l_services,
+                        minLength: 0,
+                    })
+                    $(this).trigger(jQuery.Event("keydown"))
+                })
+            })
+            $.get('{{ url_for("api_get_statuses") }}', function(data) {
+                $('#status').focus(function(){
+                    $('#status').val('')
+                    var l_statuses = []
+                    for (var lst in data) {
+                        l_statuses.push(data[lst])
+                    }
+                    $('#status').autocomplete({
+                        source: l_statuses,
+                        minLength: 0,
+                    })
+                    $(this).trigger(jQuery.Event("keydown"))
+                })
+            })
+            $.get('{{ url_for("api_get_addresses")}}', function(data) {
+                $('#city').focus(function(){
+                    $('#city').val('')
+                    $('#street').val('')
+                    $('#house').val('')
+                    var l_citys = []
+                    for (var c in data) {
+                        l_citys.push(c)
+                    }
+                    $('#city').autocomplete({
+                        source: l_citys,
+                        minLength: 0,
+                    })
+                    $(this).trigger(jQuery.Event("keydown"))
+                })
+                $('#street').focus(function(){
+                    $('#street').val('')
+                    $('#house').val('')
+                    var l_streets = []
+                    if ($('#city').val()) {
+                        for (var s in data[$('#city').val()]) {
+                            l_streets.push(s)
+                        }
+                        $('#street').autocomplete({
+                            source: l_streets,
+                            minLength: 0,
+                        })
+                    } else {
+                        $('#street').autocomplete({
+                            source: '',
+                            minLength: 0,
+                        })
+                    }
+                    $(this).trigger(jQuery.Event("keydown"))
+                })
+                $('#house').focus(function(){
+                    $('#house').val('')
+                    if ($('#street').val()) {
+                        $('#house').autocomplete({
+                            source: data[$('#city').val()][$('#street').val()],
+                            minLength: 0,
+                        })
+                    } else {
+                        $('#house').autocomplete({
+                            source: '',
+                            minLength: 0,
+                        })
+                    }
+                    $(this).trigger(jQuery.Event("keydown"))
+                })
+            })
+            $('#search-form').on('submit', function(event){
+                event.preventDefault()
+                $('#results-wrap').removeClass('invisible')
+                $('#send-wrap').removeClass('invisible')
+                $('#send-form button[type="submit"]').prop('disabled', false)
+                $('#results > tbody tr').remove()
+                $('input:checkbox').prop('checked', false)
+                $.post('{{ url_for("api_get_users") }}',
+                {
+                    jcity: $('#city').val(),
+                    jstreet: $('#street').val(),
+                    jhouse: $('#house').val(),
+                    jbalance: $('#balance').val(),
+                    jequal: $('#equal :selected').val(),
+                    jservice: $('#service').val(),
+                    jstatus: $('#status').val(),
+                },
+                function(data) {
+                    var count = 0
+                    $.each(data, function (id, dict) {
+                        count++
+                        $('#results > tbody').append('<tr class="">')
+                        $('#results > tbody tr:last-child').append('<td class="">')
+                        $('#results > tbody tr:last-child td').append($("<div class='form-row' id='row" + id +"'>"))
+                        $('#row' + id).append($("<div class='form-group form-check' id='group" + id +"'>"))
+                        $('#group' + id).append($("<input type='checkbox' class='form-check-input' id='" + id + "'>"))
+                        $('#results > tbody tr:last-child').append('</td>')
+                        $('#results > tbody tr:last-child').append('<td id="uid" class="">' + id + '</td>')
+                        $.each(dict, function (key, value) {
+                            $('#results > tbody tr:last-child').append('<td id="' + key + '" class="">' + dict[key] + '</td>')
+                        })
+                        $('#results > tbody tr:last-child').append('<td id="status' + id + '" class="">Ожидает отправки</td>')
+                        $('#results > tbody tr:last-child').append('</tr>')
+                    })
+                    $('#count').text('--' + count + '--')
+                })
+            })
+            $('#checkall').on('click', function () {
+                if ($(this).is(':checked')) {
+                    $('input:checkbox').prop('checked', true)
+                } else {
+                    $('input:checkbox').prop('checked', false)
+                }
+            })
+            $('#send-form').on('submit', function (event) {
+                $('#send-form button[type="submit"]').prop('disabled', true)
+                var send_list = []
+                event.preventDefault()
+                if ($('input:checked').length == 0) {
+                    alert('Выберите абонетов для отправки сообщения.')
+                } else {
+                    $('input:checked').each(function (){
+                        if ($(this).attr('id') != 'checkall') {
+                            send_list.push($(this).attr('id'))
+                        }
+                    })
+                    $.post('{{ url_for("api_send_msg") }}',
+                        $.extend({}, send_list),
+                        function (data) {
+                            $.each(data, function (id, msg) {
+                                $('#status' + id).text('')
+                                $.each(msg, function (p, s) {
+                                    $('#status' + id).append(p + ':' + s + '\n')
+                                })
+                            })
+                        }
+                    )
+                }
+            })
+        })
+    </script>
+{% endblock %}

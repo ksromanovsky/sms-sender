@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="mx-auto">
+        <div class="h1">
+            Sign in
+        </div>
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username(size=32, class="form-control") }}
+                {% for error in form.username.errors %}
+                    <div style="color: red;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(size=32, class="form-control") }}
+                {% for error in form.password.errors %}
+                    <div style="color: red;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group d-flex justify-content-end">{{ form.submit(class="btn btn-primary") }}</div>
+        </form>
+    </div>
+{% endblock %}
+
+
+
+if current_user.is_authenticated:
+        return redirect(url_for('index'))
+form = LoginForm()
+if form.validate_on_submit():
+    adm = Admins.query.filter_by(adm_login=form.username.data).first()
+    if adm is None or not adm.check_pwd(form.password.data):
+        return redirect(url_for('login'))
+    login_user(adm)
+    return_page = request.args.get('next')
+    if not return_page or url_parse(return_page).netloc != '':
+        return_page = url_for('index')
+    return redirect(return_page)
