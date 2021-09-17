@@ -23,6 +23,7 @@ services:
 
   sms_sender:
     build: sms_sender
+    container_name: sms_sender
     environment:
       - MYSQL_SERVER=${MYSQL_SERVER}
       - MYSQL_USER=${MYSQL_USER}
