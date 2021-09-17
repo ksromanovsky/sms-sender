@@ -108,19 +108,19 @@ def api_get_users():
         if jse != '':
             if jb != '':
                 if je == '1':
-                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '0000-00-00 00:00:00').all():
+                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '2999-12-31 23:59:59').all():
                         if (Services.query.filter(Services.id == s.service).first().name == jse) & (u.balance <= jb):
                             users_list.append(u)
                 elif je == '2':
-                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '0000-00-00 00:00:00').all():
+                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '2999-12-31 23:59:59').all():
                         if (Services.query.filter(Services.id == s.service).first().name == jse) & (u.balance == jb):
                             users_list.append(u)
                 elif je == '3':
-                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '0000-00-00 00:00:00').all():
+                    for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '2999-12-31 23:59:59').all():
                         if (Services.query.filter(Services.id == s.service).first().name == jse) & (u.balance >= jb):
                             users_list.append(u)
             else:
-                for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '0000-00-00 00:00:00').all():
+                for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '2999-12-31 23:59:59').all():
                     if Services.query.filter(Services.id == s.service).first().name == jse:
                         users_list.append(u)
         else:
@@ -139,7 +139,7 @@ def api_get_users():
 
     for u in users_list:
         us = list()
-        for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '0000-00-00 00:00:00').all():
+        for s in User_services.query.filter(User_services.uid == u.id, User_services.date_end == '2999-12-31 23:59:59').all():
             us.append(Services.query.filter(Services.id == s.service).first().name)
         results.update({u.id: {'1services': us, '2fullname': u.fullname, '3phones': [u.phone1, u.phone2, u.phone3], '4balance': int(u.balance)}})
     return jsonify(results)
